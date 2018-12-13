@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+  
+before_install:
+  - docker build -t davyvandelaar/react-test -f ./client/Dockerfile.dev ./client
+  
+script:
+  - docker run davyvandelaar/react-test npm test -- --coverage
+
+after_succes:
+  - docker build -t davyvandelaar/multi-client ./client
+  - docker build -t davyvandelaar/multi-nginx ./nginx
+  - docker build -t davyvandelaar/multi-server ./server
+  - docker build -t davyvandelaar/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take images and push to dockerhub
+  - docker push davyvandelaar/multi-client
+  - docker push davyvandelaar/multi-nginx
+  - docker push davyvandelaar/multi-server
+  - docker push davyvandelaar/multi-worker
